@@ -1,0 +1,338 @@
+---
+title: "Differential Genetic Expression between Gyri and Sulci Cortical Plate in Fetal Sheep Brain"
+output: html_document
+date: '2022-08-14'
+author: Sebastian Quezada Rojas
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+This is a **modified** version of the analysis performed for "Genetic and microstructural differences in the cortical plate of gyri and sulci during gyrification in fetal sheep", (PMID: 32609332 DOI: 10.1093/cercor/bhaa171). **This analysis is for display purposes only**. 
+
+Raw RNA Seq FASTQ files can be downloaded from NCBI's GEO repository, [accession GSE141233](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE141233). Sheep genome (v3.1) and annotation files were obtained from the [International Sheep Genomics Consortium](https://www.sheephapmap.org/). Sheep annotation files can also be found at [Ensembl](https://asia.ensembl.org/Ovis_aries/Info/Index)
+
+Due to the present inability to reproduce some computationally expensive steps and files (Steps 1 to 3), the analysis will be fed a `csv` file that was produced as output from `featureCounts` as part of the original analysis. See Step 4 for more details. Notwithstanding this limitation, the code for Steps 1 to 3 is still presented.
+
+Additionally, the original study is here extended (for the sake of scientific curiosity) via the inclusion of *simulated* samples. See step 7 for more details. These samples, understandably, are not part of the original study.
+
+The pipeline uses `STAR`, `featureCounts`, `edgeR` and `edgeRun`
+
+## Step 1 - Building the Genome Index
+
+After loading the raw files, genome file and annotation file to the HPC (this can be done using `rsync`), the first step is to build the genome index using `STAR`.
+
+    module load STAR
+    STAR --runThreadN 16 \
+         --runMode genomeGenerate \
+         --genomeDir ~/RNASeqSQ/GenomeDir/ \
+         --genomeFastaFiles ~/RNASeqSQ/ref_genome/Sheep_genome.fna \
+         --sjdbGTFfile ~/RNASeqSQ/ref_genome/Sheep_genome_annotations.gff \
+         --sjdbOverhang 49 \
+         --sjdbGTFtagExonParentTranscript Parent
+
+## Step 2 - Mapping FASTQ files
+
+The second step is mapping of the FASTQ files, which can be done using a loop command again using `STAR`.
+
+    #!/bin/bash
+
+    module load STAR
+
+    fqFiles=`find $1 -name '*.gz' -type f`
+
+    for fqFile in $fqFiles;do
+      STAR --runThreadN 16 \
+           --genomeDir ~/RNASeqSQ/GenomeDir/ \
+           --readFilesIn $fqFile \
+           --readFilesCommand zcat \
+           --outFileNamePrefix ~/RNASeqSQ/mapped_data/$(basename $fqFile .fastq.gz)_ \
+           --outSAMstrandField intronMotif \
+           --outSAMtype BAM Unsorted \
+           --outSAMunmapped Within \
+           --outFilterIntronMotifs RemoveNoncanonical
+    done
+
+## Step 3 - Read Summarisation
+
+After mapping, read summarisation can be performed locally in a decent-enough laptop in R environment. This step can be done using RSubread's `featureCounts`. All the next steps can be performed locally in R, which saves resources on the HPC.
+```
+    library(Rsubread)
+    aligned_files <- c("mapped_data_ensembl/1251.1G_ensembl_Aligned.out.bam",
+                           "mapped_data_ensembl/1251.1S_ensembl_Aligned.out.bam",
+                           "mapped_data_ensembl/1251.2G_ensembl_Aligned.out.bam",
+                           "mapped_data_ensembl/1251.2S_ensembl_Aligned.out.bam",
+                           "mapped_data_ensembl/1452.1G_ensembl_Aligned.out.bam",
+                           "mapped_data_ensembl/1452.1S_ensembl_Aligned.out.bam",
+                           "mapped_data_ensembl/1452.2G_ensembl_Aligned.out.bam",
+                           "mapped_data_ensembl/1452.2S_ensembl_Aligned.out.bam")
+    data_new<-featureCounts(aligned_files, annot.ext="ref_genome_ensembl/Sheep_genome_annotations_ensembl.gtf", isGTFAnnotationFile=TRUE, nthreads=16)
+```
+
+## Step 4 - Exploring and Cleaning the Data
+
+Normally, the data is extracted from the object output by featureCounts as shown below:
+```
+data <- as.data.frame(data_new$counts)
+```
+
+However and due to the present inability to reproduce these `.bam` files, the raw data will be input from a `csv` file produced as output in the original analysis.
+
+```{r}
+data_final <- read.csv("counts_new_raw.csv",
+                       header = TRUE)
+colnames(data_final) <- c("Ensembl_ID", "1251.1G", "1251.1S", "1251.2G", "1251.2S", "658.1G", "658.1S", "1452.1G", "1452.1S", "1452.2G", "1452.2S")
+rownames(data_final) <- data_final[,1]
+data_final <- data_final[,c(2:11)]
+```
+
+The data should give a table with the counts for each sample ID as columns and the Ensembl IDs as rownames (if not, it can be easily transformed anyway). These Ensembl IDs will be used later to pair the IDs with the gene symbols, which are more informative than the IDs.
+
+Next, we will import the experimental design matrix prepared and create the factors required.
+```{r}
+experiment_design <- read.table("experiment_design.txt",header = T, sep = "\t")
+experiment_design
+rownames(experiment_design) <- experiment_design$SampleID
+samples_names <- as.character(experiment_design$SampleID)
+sample_type <- factor(experiment_design$Sample_type)
+sheep_number <- factor(experiment_design$Source_animal)
+```
+
+Then, we will create the DGEList object to calculate dispersion and create a MDS (PCA) plot to have an overlook of the data points.
+
+```{r}
+library(edgeR)
+DGEList.edgeR <- DGEList(counts=data_final, group = sample_type)
+DGEList.edgeR <- calcNormFactors(DGEList.edgeR)
+DGEList.edgeR <- estimateCommonDisp(DGEList.edgeR,verbose = T)
+```
+This outputs a Common Dispersion of ~0.25 and a Biological Coefficient of Variation (BCV) of ~0.5, which is unexpectedly high. Let's observe the MDS for the samples.
+
+```{r}
+data_norm <- calcNormFactors(DGEList.edgeR)
+colours <- sheep_number
+points <- rep(16,5)
+plotMDS(data_norm, col=colours, labels=NULL, pch=points)
+legend("bottomright", legend=levels(sheep_number), pch=points, col=c(1,2,3,4,5), ncol=2)
+```
+
+After normalisation, it appears as if one of the samples from Sheep_3 (Sheep number 658.1 is an outlier. This means we will have to drop both samples from the same sheep, since we cannot have a sheep with only one sample).
+
+We will thus repeat the above steps but trimming our data and experimental design to include only Sheep 1, 2, 4 and 5.
+
+```{r}
+#Trimming data and matrix
+data_final2 <- data_final[,c(1:4,7:10)]
+experiment_design2 <- experiment_design[c(1:4,7:10),]
+
+#Defining factors
+samples_names2 <- as.character(experiment_design2$SampleID)
+sample_type2 <- factor(experiment_design2$Sample_type)
+sheep_number2 <- factor(experiment_design2$Source_animal)
+```
+```{r}
+DGEList.edgeR2 <- DGEList(counts=data_final2, group = sample_type2)
+DGEList.edgeR2 <- calcNormFactors(DGEList.edgeR2)
+DGEList.edgeR2 <- estimateCommonDisp(DGEList.edgeR2,verbose = T)
+```
+
+```{r}
+data_norm2 <- calcNormFactors(DGEList.edgeR2)
+colours2 <- c(1,1,2,2,4,4,5,5)
+points2 <- rep(16,4)
+plotMDS(data_norm2, col=colours2, labels=NULL, pch=points2)
+legend("topleft", legend=levels(sheep_number2), pch=points2, col=c(1,2,4,5), ncol=2)
+```
+
+The samples now show a better clustering pattern with samples coming from the same sheep clustering closer to each other, as expected. Removing the outlier improved the `Disp` and `BCV` parameters, but there is still a lot of variability, which probably comes from the fact that we still haven't filtered out the noise from unexpressed and low-expressed genes. We will do this in the next step.
+
+# Step 5 - Filtering Out The Noise and QC'ing Before Stats.
+
+Next, low count genes need to be cleaned out to reduce the noise and their impact on the stats. Genes that have less than 5 counts will be removed.
+
+```{r}
+DGEList.edgeR3 <- DGEList(counts=data_final2, group = sample_type2)
+keep <- filterByExpr(DGEList.edgeR3)
+summary(keep)
+
+```
+```{r}
+DGEList.edgeR3 <- DGEList.edgeR3[keep, , keep.lib.sizes=FALSE]
+DGEList.edgeR3 <- calcNormFactors(DGEList.edgeR3)
+```
+
+Which reduces the original data frame with 27054 entries to 13221. Over half of the table was purged! Which is understandable since the table produced by `featureCounts` represents the gene expression counts in the samples mapped against **all** the genes in the genome, whereas the samples are derived from (mainly) neurons in the cortical plate (see details in study), which will only express a subset of genes. Additionally, some low level counts can be the product of sequencing error, rather than being true counts.
+
+We'll repeat the calculations for Dispersion and BCV, as well as looking at how the samples cluster after removing the noise.
+
+```{r}
+
+DGEList.edgeR3 <- estimateCommonDisp(DGEList.edgeR3,verbose = T)
+```
+```{r}
+data_norm3 <- calcNormFactors(DGEList.edgeR3)
+colours2 <- c(1,1,2,2,4,4,5,5)
+points2 <- rep(c(16,15),4)
+plotMDS(data_norm3, col=colours2, labels=NULL, pch=points2)
+legend("topright", legend=levels(sheep_number2), pch=16, col=c(1,2,4,5), ncol=2)
+```
+```{r}
+##Plot BCV trends
+DGEList.edgeR3 <- estimateDisp(DGEList.edgeR3)
+plotBCV(DGEList.edgeR3)
+```
+```{r}
+for (column in c(1:8)){
+  plotMD(cpm(DGEList.edgeR3, log=TRUE), column = column)
+  abline(h=0,col="red",lty=2,lwd=2)
+}
+```
+
+The clustering is now much more like we expected it in which samples coming from the same animal are closer genetically to each other, and both the Common Dispersion and the Biological Coefficient of Variability are within expected values for the sample types we are using here (genetically unrelated animals). However, the MDS here also spells some bad news for our analysis, since there appears to be more variability between animals than between samples types from the same animal (Gyrus vs Sulcus), which is what we're interested in. Finally, the MD plots show the samples clustering around log-fold change of 0, meaning the composition bias between libraries has been successfully removed.
+
+## Step 6 - Differential Expression
+
+First, the design matrix is input
+```{r}
+design_matrix <- model.matrix(~ 0 + sample_type2)
+colnames(design_matrix) <- levels(sample_type2)
+design_matrix
+```
+Then, we fit the model using the quasi-likelihood pipeline using `gkmQLFit`.
+
+```{r}
+fit <- glmQLFit(DGEList.edgeR3, design_matrix, robust = TRUE)
+```
+
+Then we make the contrasts we're interested in.
+
+```{r}
+contrast = makeContrasts(Gyrus - Sulcus, levels = design_matrix)
+```
+
+And we apply the QL Test to determine differential expression.
+```{r}
+GvS <- glmQLFTest(fit, contrast = contrast)
+topTags(GvS)
+```
+```{r}
+summary(decideTests(GvS))
+```
+However, as expected and predicted from the MDS, `edgeR` was unable to find differentially expressed genes between `Gyrus` and `Sulcus` with the data provided.
+
+An alternative to `edgeR` is `edgeRun`, that offers an unconditional exact test that is better suited for conditions when we have low number of biological replicates (which is the case for this study). The test will be run with 50,000 iterations which is the minimum recommended by the documentation, although this is computationally expensive. *Please note that this package is no longer available at Bioconductor and needs to be installed from CRAN's archive.*
+
+```{r}
+library(edgeRun)
+GvS_edgeRun <-UCexactTest(DGEList.edgeR3, upper=50000)
+```
+```{r}
+topTags(GvS_edgeRun)
+```
+```{r}
+summary(decideTests(GvS_edgeRun))
+```
+
+Although the FDR has decreased importantly, this test was still unsuccessful in extracting differentially expressed genes from our dataset, most likely due to the low number of biological replicates and the small amount of variation for the factor we wanted to detect. The MDS shown earlier shows that the main variability factors do *not* separate the samples based on the factor we want, and samples from `Gyrus` and `Sulcus` cluster together. Plotting the different dimensions can help further make sense of the issue:
+
+```{r}
+plotMDS(data_norm3, dim.plot = c(3,4), col=rep(c(1,2),4), pch=rep(c(15,16),4))#, col=colours2, labels=NULL, pch=points2)
+legend("topright", legend=levels(sample_type2), pch=c(15,16), col=c(1,2), ncol=1)
+```
+
+As can be seen in the MDS, dimension 3 (which accounts for only 14% of the variability in the dataset) is the factor that best separates `Gyrus` from `Sulcus`, and this is done only partially since one of the `Sulcus` samples behaves very similarly to the `Gyrus` samples. This is something that the original study also confirmed via immunohistochemical approaches for some genes such as BDNF and NeuroD6 -- it was only after extensive sampling of `Gyrus` and `Sulcus` of the cortical plate throughout the cortex at different rostrocaudal levels that differential genetic expression became evident enough to be detected via two-way ANOVA. This supports the idea that more biological replicates would have been a desirable approach.
+
+The little genetic difference between the `Gyrus` and `Sulcus` samples is understandable since the samples come from the the *same* cortical structure (cortical plate), the *same* cortical region (around the central (Ansate) sulcus), and from normal, healthy sheep without any treatments. Since these specimens are not genetically related, the genetic variability between them is maximal as well.
+
+## Step 7 - Extending the Original Study via Simulated Biological Replicates.
+
+The previous step is where the RNA Seq component of the original study ends (see DOI: 10.1093/cercor/bhaa171 for more details). However, I've always wondered: What if instead of 4 sheep I had, say, 9-10 sheep that behaved similarly enough in the gyral and sulcal expression to the ones in this dataset (as variable as they were)? Would I have had the statistical power to uncover some differential genetic expression between gyri and sulci?
+
+Since the study is concluded and published, and that there is no budget to do this (or Animal Ethics Committee that would approve of it), I decided to simulate some data based using my 4 sheep (`1251.1`, `1251.2`, `1451.1` and `1451.2`) as guidance.
+
+The data is modeled by using a Begative Binomial distribution centred around the mean counts for each gene for the 4 original sheep, with a random probability that with a range of 0.4 and centred at 0.5 (thus between between 0.3 and 0.7 -- narrower ranges deliver too much clustering of the simulated samples therefore not a good "real world" simulation, and wider ranges deliver data that is so variable that makes the original samples cluster and is thus *too* variable):
+
+```{r}
+#Separate the gyral and the sulcal data.
+gyri_data <- data_final2[, c(1,3,5,7)]
+sulci_data <- data_final2[, c(2,4,6,8)]
+
+#Simulate the data
+set.seed(10)
+sheep_sim_data <- data_final2
+defaultW <- getOption("warn")
+options(warn = -1)
+n <- 1
+min <- 0.3
+max <- 0.7
+sheep_sim_data['sim_sheep1.G'] <- sapply(rowMeans(gyri_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep1.S'] <- sapply(rowMeans(sulci_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep2.G'] <- sapply(rowMeans(gyri_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep2.S'] <- sapply(rowMeans(sulci_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep3.G'] <- sapply(rowMeans(gyri_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep3.S'] <- sapply(rowMeans(sulci_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep4.G'] <- sapply(rowMeans(gyri_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep4.S'] <- sapply(rowMeans(sulci_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep5.G'] <- sapply(rowMeans(gyri_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+sheep_sim_data['sim_sheep5.S'] <- sapply(rowMeans(sulci_data), function(x) rnbinom(1, x, prob = sample(runif(n=n, min=min, max=max),1)))
+options(warn = defaultW)
+sheep_sim_data[is.na(sheep_sim_data)] <- 0
+head(sheep_sim_data, 20)
+```
+
+And now we can repeat the `edgeR` and `edgeRun` approaches using this data. 
+```{r}
+#Experimental design setup
+experiment_design_sim <- read.table("experiment_design_sim.txt",header = T, sep = "\t")
+experiment_design_sim
+rownames(experiment_design_sim) <- experiment_design_sim$SampleID
+samples_names_sim <- as.character(experiment_design_sim$SampleID)
+sample_type_sim <- factor(experiment_design_sim$Sample_type)
+sheep_number_sim <- factor(experiment_design_sim$Source_animal)
+```
+```{r}
+DGEList.edgeR_sim <- DGEList(counts=sheep_sim_data, group = sample_type_sim)
+keep_sim <- filterByExpr(DGEList.edgeR_sim)
+summary(keep_sim)
+```
+```{r}
+DGEList.edgeR_sim <- DGEList.edgeR_sim[keep_sim, , keep.lib.sizes=FALSE]
+DGEList.edgeR_sim <- calcNormFactors(DGEList.edgeR_sim)
+DGEList.edgeR_sim <- estimateCommonDisp(DGEList.edgeR_sim,verbose = T)
+```
+```{r}
+data_norm_sim <- calcNormFactors(DGEList.edgeR_sim)
+colours_sim <- c(11,11,2,2,4,4,5,5,6,6,7,7,8,8,10,10,12,12,1,1)
+points_sim <- rep(c(2,6),9)
+plotMDS(data_norm_sim, col=colours_sim)#, labels=NULL, pch=points_sim)
+#legend("topright", cex=.65, legend=c(levels(sheep_number_sim), levels(sample_type_sim)), pch=c(rep(c(15),9),2,6), col=c(11,2,4,5,6,7,8,10,12,1,1), ncol=2)
+```
+```{r}
+data_norm_sim <- calcNormFactors(DGEList.edgeR_sim)
+colours_sim <- rep(c(1,2),9)
+points_sim <- rep(c(15,16),9)
+plotMDS(data_norm_sim, col=colours_sim, labels=NULL, pch=points_sim)
+legend("topright", legend=levels(sample_type_sim), pch=c(15,16), col=c(1,2), ncol=1)
+```
+
+```{r}
+design_matrix_sim <- model.matrix(~ 0 + sample_type_sim)
+colnames(design_matrix_sim) <- levels(sample_type_sim)
+design_matrix_sim
+```
+```{r}
+fit_sim <- glmQLFit(DGEList.edgeR_sim, design_matrix_sim, robust = TRUE)
+contrast_sim = makeContrasts(Gyrus - Sulcus, levels = design_matrix_sim)
+GvS_sim <- glmQLFTest(fit_sim, contrast = contrast_sim)
+topTags(GvS_sim)
+```
+
+```{r}
+summary(decideTests(GvS_sim))
+```
+So, using this approach we find that we have 116 genes downregulated in `Gyrus` compared to `Sulcus`, and 138 genes that are upregulated in `Gyrus` compared to `Sulcus`. 
+
+
