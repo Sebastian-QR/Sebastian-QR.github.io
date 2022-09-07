@@ -14593,7 +14593,7 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="Creating-a-Logistic-Regressor-to-Detect-Fraud-Using-Synthetic-Payment-Data">Creating a Logistic Regressor to Detect Fraud Using Synthetic Payment Data<a class="anchor-link" href="#Creating-a-Logistic-Regressor-to-Detect-Fraud-Using-Synthetic-Payment-Data">&#182;</a></h1>
+<h1 id="Creating-and-Evaluating-a-Logistic-Regressor-to-Detect-Fraud-Using-Synthetic-Payment-Data">Creating and Evaluating a Logistic Regressor to Detect Fraud Using Synthetic Payment Data<a class="anchor-link" href="#Creating-and-Evaluating-a-Logistic-Regressor-to-Detect-Fraud-Using-Synthetic-Payment-Data">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -14604,7 +14604,8 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="Overview">Overview<a class="anchor-link" href="#Overview">&#182;</a></h2><p>This is a short project where I use synthetic payment payment data created by Edgar Lopez-Rojas at <a href="https://www.kaggle.com/datasets/ealaxi/paysim1">Kaggle</a> to create a Logistic Regression algorithm to detect likely financial fraud based on several features of the data. Please note: <strong>I am not a financial expert</strong> and the commentary here is based on my restricted knowledge of day-to-day finances and is <strong>for amusement purposes only</strong>. The analysis presented here is shown for code display purposes only and it does not constitute financial advice of any kind.</p>
+<h2 id="Overview">Overview<a class="anchor-link" href="#Overview">&#182;</a></h2><p>This is a short project where I use synthetic payment payment data created by Edgar Lopez-Rojas at <a href="https://www.kaggle.com/datasets/ealaxi/paysim1">Kaggle</a> to create and evaluate a Logistic Regression (LR) algorithm to detect likely financial fraud based on several features of the data. Please note: <strong>I am not a financial expert</strong> and the commentary here is based on my restricted knowledge of day-to-day finances and is <strong>for amusement purposes only</strong>. The analysis presented here is shown for code display purposes only and it does not constitute financial advice of any kind.</p>
+<p>IMPORTANT: Rather than showing you how to build the perfect LR system using standard machine learning approaches, this short project is intended to illustrate the complexities of using real-world data to detect something as uncommon as financial fraud, and why special attention is required to detect and evaluate the actual performance of the model.</p>
 <p>If you find something that you think is wrong or could be done better or simpler, feel free to contact me!</p>
 <hr />
 <p>The data comes with the following info and description:</p>
@@ -15160,7 +15161,7 @@ class="
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>Damn! The data is <em>ridiculously</em> skewed! But it is somewhat expected: remember from the description that there is no information about merchants for <code>oldbalanceDest</code> and <code>newbalanceDest</code> for merchant customers (<code>nameOrig</code> and <code>nameDest</code> that start with an 'M')? That probably explains some of the skewness in those variables (plenty of <code>0</code>s for those variables from the merchants). Additionally, If we think about what the data represents (from the description of the data from Kaggle, see the Overview):</p>
+<p>Damn! The data is <em>ridiculously</em> skewed! But it is somewhat expected: remember from the description that there is no information about merchants for <code>oldbalanceDest</code> and <code>newbalanceDest</code> for merchant customers (<code>nameOrig</code> and <code>nameDest</code> that start with an 'M')? That probably explains some of the skewness in those variables. Why? If we think about what the data represents (from the description of the data from Kaggle, see the Overview):</p>
 <blockquote>
 <p>[This is] a synthetic dataset [...] that resembles the <strong>normal operation of transactions</strong> and injects malicious behaviour to later evaluate the performance of fraud detection methods.</p>
 </blockquote>
@@ -16478,7 +16479,7 @@ Percentage of transaction where origin is a customer:  100.0 %
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>Sounds too good to be true! Let's try to see this with our own eyes. First, we'll use the model to output the predictions for the test data in a different variable:</p>
+<p>Sounds too good to be true! But we need to dig deeper. Let's try to see this with our own eyes. First, we'll create a variable that represents our predictions, so we can compare it against the ground truth:</p>
 
 </div>
 </div>
@@ -16506,7 +16507,7 @@ Percentage of transaction where origin is a customer:  100.0 %
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>And now we can collecet the test data side by side with the predictions and see how many times the model got the prediction right (basically, in how many cases <code>y_test[isFraud]</code> is equal to <code>y_predict</code>).</p>
+<p>And now we can use this to check our Confusion Matrix:</p>
 
 </div>
 </div>
@@ -16519,12 +16520,70 @@ Percentage of transaction where origin is a customer:  100.0 %
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test1</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'y_test'</span><span class="p">:</span> <span class="n">y_test</span><span class="p">[</span><span class="s1">'isFraud'</span><span class="p">],</span> <span class="s1">'y_predict'</span><span class="p">:</span> <span class="n">y_predict</span><span class="p">})</span>
-<span class="n">equals</span> <span class="o">=</span> <span class="n">test1</span><span class="p">[</span><span class="n">test1</span><span class="p">[</span><span class="s1">'y_test'</span><span class="p">]</span> <span class="o">==</span> <span class="n">test1</span><span class="p">[</span><span class="s1">'y_predict'</span><span class="p">]]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+<span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[&nbsp;]:</div>
+
+
+
+
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
+<pre>array([[1906278,      30],
+       [   2478,       0]])</pre>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p>The Confusion Matrix tells us the number of:</p>
+<p>-True Positives (<code>1906278</code>, top left, or index <code>[0][0]</code>), which is the number of transactions that were not fraud and that were classified as such ().</p>
+<p>-False Positives (<code>30</code>, top right, or index <code>[0][1]</code>), which is the number of transactions that were not fraud but were classified as fraud.</p>
+<p>-False Negatives (<code>2478</code> bottom left, or index <code>[1][0]</code>), which is the number of transactions that were frauds but were <em>not</em> classified as such.</p>
+<p>-True Positives (<code>0</code> bottom right, or index <code>[1][1]</code>), which is the number of transactions that were actual fraud and that were classified as such.</p>
+<p>This basically tells us that the classifier is doing its intended job terribly, as it is not picking up <em>any</em> actual fraud. Furthermore, it is classifying some other non-fraudulent activity as fraud. The thing that the model does superbly good (which is reflected in our previous score and why we can see it is misleading) is classifying non-fraud as non-fraud. But this is not what we need if we want it to detect fraud! The score we saw earlier is a reflection of how good the model is at classifying things as they are (non-frauds as non-frauds, and frauds as frauds), but <em>regardless of whether they are true positives or true negatives</em>.</p>
+<p>This point is driven further home by showing that the usual metrics that we use to evaluate our model all yield <code>0</code> since they all use True Positives as numerator in the calculation:</p>
+
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">recall_score</span><span class="p">,</span> <span class="n">precision_score</span><span class="p">,</span> <span class="n">f1_score</span>
 <span class="nb">print</span><span class="p">(</span>
-    <span class="s1">'Number of correct guesses: '</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">equals</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
-    <span class="s1">'Number of total guesses: '</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">test1</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
-    <span class="s1">'Ratio of correct guesses: '</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">equals</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">test1</span><span class="p">)</span>
+    <span class="s1">'Recall Score: '</span><span class="p">,</span> <span class="n">recall_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+    <span class="s1">'Precision Score: '</span><span class="p">,</span> <span class="n">precision_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+    <span class="s1">'F1 Score: '</span><span class="p">,</span> <span class="n">f1_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">)</span>
 <span class="p">)</span>
 </pre></div>
 
@@ -16545,9 +16604,9 @@ Percentage of transaction where origin is a customer:  100.0 %
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Number of correct guesses:  1906278 
-Number of total guesses:  1908786 
-Ratio of correct guesses:  0.9986860758618306
+<pre>Recall Score:  0.0 
+Precision Score:  0.0 
+F1 Score:  0.0
 </pre>
 </div>
 </div>
@@ -16563,8 +16622,18 @@ Ratio of correct guesses:  0.9986860758618306
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>Which is the same as the score we obtained above for the test data. It would seem that the model is correct and might not need any further tweaking!</p>
-<p>So, what features were most important for the model? We can check the coefficients to know!</p>
+<h2 id="Revisiting-and-Tweaking-the-Model...-If-We-Can.">Revisiting and Tweaking the Model... If We Can.<a class="anchor-link" href="#Revisiting-and-Tweaking-the-Model...-If-We-Can.">&#182;</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p>Where did we go wrong? One plausible explanation could be the clear under-representation of the fraud labels in the data - it is ridiculously biased towards normal transactions, as shown below.</p>
 
 </div>
 </div>
@@ -16577,7 +16646,13 @@ Ratio of correct guesses:  0.9986860758618306
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'Variable'</span><span class="p">:</span> <span class="n">features</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="s1">'Coefficients'</span><span class="p">:</span> <span class="n">lr</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">]}))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">frauds</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pay_data</span><span class="p">[(</span><span class="n">pay_data</span><span class="p">[</span><span class="s1">'isFraud'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)])</span>
+<span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pay_data</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="s1">'Total number of frauds in total data: '</span><span class="p">,</span> <span class="n">frauds</span><span class="p">,</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+    <span class="s1">'Total number of transactions: '</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+    <span class="s1">'Proportion of frauds in the dataset: '</span><span class="p">,</span> <span class="nb">round</span><span class="p">((</span><span class="n">frauds</span><span class="o">/</span><span class="n">total</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="s1">'%'</span>
+<span class="p">)</span>
 </pre></div>
 
      </div>
@@ -16597,10 +16672,9 @@ Ratio of correct guesses:  0.9986860758618306
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>     Variable  Coefficients
-0      amount      0.088819
-1   isPayment     -0.825370
-2  isMovement      3.738023
+<pre>Total number of frauds in total data:  8213 
+Total number of transactions:  6362620 
+Proportion of frauds in the dataset:  0.13 %
 </pre>
 </div>
 </div>
@@ -16616,7 +16690,7 @@ Ratio of correct guesses:  0.9986860758618306
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>And the intercept for this model would be:</p>
+<p>This is similarly reflected in the training set:</p>
 
 </div>
 </div>
@@ -16629,7 +16703,13 @@ Ratio of correct guesses:  0.9986860758618306
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">lr</span><span class="o">.</span><span class="n">intercept_</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">frauds_train</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="p">[(</span><span class="n">y_train</span><span class="p">[</span><span class="s1">'isFraud'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)])</span>
+<span class="n">total_train</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="s1">'Total number of frauds in total data: '</span><span class="p">,</span> <span class="n">frauds_train</span><span class="p">,</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+    <span class="s1">'Total number of transactions: '</span><span class="p">,</span> <span class="n">total_train</span><span class="p">,</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+    <span class="s1">'Proportion of frauds in the dataset: '</span><span class="p">,</span> <span class="nb">round</span><span class="p">((</span><span class="n">frauds_train</span><span class="o">/</span><span class="n">total_train</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="s1">'%'</span>
+<span class="p">)</span>
 </pre></div>
 
      </div>
@@ -16649,7 +16729,9 @@ Ratio of correct guesses:  0.9986860758618306
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>-10.728679663194402
+<pre>Total number of frauds in total data:  5735 
+Total number of transactions:  4453834 
+Proportion of frauds in the dataset:  0.13 %
 </pre>
 </div>
 </div>
@@ -16665,7 +16747,10 @@ Ratio of correct guesses:  0.9986860758618306
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>It would seem that the type of transaction was <em>way</em> more important than the amount transferred! This might be due to the way the labels are associated to the original data. We can have a quick look at the data associated with fraudulent transactions compared to the ones that were not fraudulent:</p>
+<p>In a sense, this is true of real-world data of this kind. Fraud is rare. We highlight it due to our negativity bias, but in the great order of things, and with today's technology, it is a rare feature of all transactions done routinely.</p>
+<p>But we need to fix our model! Or at least try...</p>
+<p>One way around it would be to create a dataset that contains a good balance of labels. But &quot;good balance&quot; means nothing concrete, and since we are trying to create a model that does a good job at detecting fraud, we should be guided by results, not about what we think is a &quot;good balance&quot;. Let's try some proportions taking advantage of looping.</p>
+<p>First, we'll separate the frauds and non-fraud data into their own datasets:</p>
 
 </div>
 </div>
@@ -16678,8 +16763,8 @@ Ratio of correct guesses:  0.9986860758618306
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">frauds</span> <span class="o">=</span> <span class="n">pay_data</span><span class="p">[</span><span class="n">pay_data</span><span class="p">[</span><span class="s1">'isFraud'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
-<span class="n">not_frauds</span> <span class="o">=</span> <span class="n">pay_data</span><span class="p">[</span><span class="n">pay_data</span><span class="p">[</span><span class="s1">'isFraud'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">frauds_data</span> <span class="o">=</span> <span class="n">pay_data</span><span class="p">[(</span><span class="n">pay_data</span><span class="p">[</span><span class="s1">'isFraud'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)]</span>
+<span class="n">non_frauds_data</span> <span class="o">=</span> <span class="n">pay_data</span><span class="p">[(</span><span class="n">pay_data</span><span class="p">[</span><span class="s1">'isFraud'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
 </pre></div>
 
      </div>
@@ -16687,6 +16772,18 @@ Ratio of correct guesses:  0.9986860758618306
 </div>
 </div>
 
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p>Now, we'll test different proportions of labels. Since the will be guided by the proportion of frauds and non-frauds, we will create a range of lengths that reflects different proportions of <code>non_frauds_data</code> when compared with the length of our <code>frauds_data</code>.</p>
+
+</div>
+</div>
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
@@ -16695,94 +16792,12 @@ Ratio of correct guesses:  0.9986860758618306
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">frauds</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[&nbsp;]:</div>
-
-
-
-
-<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
-<pre>CASH_OUT    4116
-TRANSFER    4097
-Name: type, dtype: int64</pre>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">not_frauds</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[&nbsp;]:</div>
-
-
-
-
-<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
-<pre>CASH_OUT    2233384
-PAYMENT     2151495
-CASH_IN     1399284
-TRANSFER     528812
-DEBIT         41432
-Name: type, dtype: int64</pre>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pos_pay_data</span> <span class="o">=</span> <span class="n">pay_data</span><span class="p">[</span><span class="n">pay_data</span><span class="p">[</span><span class="s1">'amount'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="c1">#to visualise this using log scale we need to get rid of the zeros in the transactions.</span>
-<span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">pos_pay_data</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span><span class="s1">'amount'</span><span class="p">,</span> <span class="n">hue</span> <span class="o">=</span><span class="s1">'isFraud'</span><span class="p">,</span> <span class="n">element</span> <span class="o">=</span><span class="s1">'step'</span><span class="p">,</span> <span class="n">log_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stat</span><span class="o">=</span><span class="s2">"density"</span><span class="p">,</span> <span class="n">common_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">proportions</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="mf">0.1</span><span class="o">*</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]</span>
+<span class="n">lengths</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">frauds_data</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">proportions</span><span class="p">]</span>
+<span class="n">lengths</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">]</span>
+<span class="c1">#To check the sample size we need, we now compare the sample size, the </span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'A sample of </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1"> from the non-fraud data represents a </span><span class="si">{</span><span class="nb">round</span><span class="p">((</span><span class="n">i</span><span class="o">*</span><span class="mi">100</span><span class="o">/</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">frauds_data</span><span class="p">))),</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">% of the total dataset compared when the sample and the frauds dataset are combined'</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -16801,15 +16816,18 @@ Name: type, dtype: int64</pre>
     <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 
 
-
-
-<div class="jp-RenderedImage jp-OutputArea-output ">
-<img src="data:image/png;base64,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3yYxMZHFixczZMgQFi5cyOjRo9m/fz/t27dvtHoVbkRERJqpjq0CiG7XwtNlVGvBggVMnTqVu+66C4DFixfz0UcfsWTJEh599NFGO646FIuIiIjLFRUVsX37dhISEpzLrFYrCQkJbN26tVGPrXAjIiIiLnfy5ElsNhthYWEVloeFhZGRkdGox1a4EREREVNRuBERERGXa9euHV5eXmRmZlZYnpmZSXh4eKMeW+FGREREXM7X15eBAweSnJzsXGa320lOTmbo0KGNemw9LSUiIiKNIjExkcmTJzNo0CDi4+NZuHAh+fn5zqenGovCjYiISDN1LPt8kz7OxIkTycrKYtasWWRkZBAXF8fq1asrdTJ2NYUbERGRZqZ1C1/8faws+uyA247p72OldQvfOm83ffp0pk+f3ggVVU/hRkREpJnp2CqA5IdGam6paijciIiINEMdWwU0m7DhbnpaSkRERExF4UZERERMReFGRERETEXhRkRERExF4UZERERMReFGRERETEXhRkRERExF49yIiIg0R9lpcO6U+44X2BZaRbrveA2gcCMiItLcZKfBosFQ7J65pQDwCYBpX9c64GzcuJGnnnqK7du3k56ezsqVKxk/fnzj1niBwo2IiEhzc+6UEWyueQhC3HA1JScNPp9vHLeW4SY/P5/Y2Fh+85vfcNtttzVygRV5NNzMnTuXFStWsG/fPgICAhg2bBjz5s2jR48e1W6TlJRUaap0Pz8/CgoKGrtcERGRpiUkEtrGeLqKKo0dO5axY8d65Nge7VC8YcMGpk2bxhdffMHatWspLi7mhhtuID8//5LbBQcHk56e7nylpKS4qWIRERFp6jx65Wb16tUV3iclJdG+fXu2b9/OtddeW+12FouF8PDwxi5PREREmqEm9Sh4Tk4OAG3atLlku7y8PLp06UJkZCS33nor33//fbVtCwsLyc3NrfASERER82oy4cZut/PAAw8wfPhw+vbtW227Hj16sGTJEt5//31ef/117HY7w4YN4+jRo1W2nzt3LiEhIc5XZGTzeIxNRERE6qfJhJtp06axe/du3nrrrUu2Gzp0KJMmTSIuLo4RI0awYsUKQkND+de//lVl+5kzZ5KTk+N8paWlNUb5IiIi0kQ0iUfBp0+fzocffsjGjRvp1KlTnbb18fFhwIABHDhwoMr1fn5++Pn5uaJMERERqaW8vLwK382HDx9m586dtGnThs6dOzfqsT0abhwOB/fddx8rV65k/fr1REdH13kfNpuN7777jnHjxjVChSIiIk1YjpvuRtTjONu2bWPUqFHO94mJiQBMnjyZpKQkV1VWJY+Gm2nTprFs2TLef/99goKCyMjIACAkJISAgAAAJk2aRMeOHZk7dy4Ac+bM4aqrriImJobs7GyeeuopUlJSuPvuuz32OURERNwqsK0xYvDn8913TJ8A47i1NHLkSBwORyMWVD2PhpsXX3wRME5AeUuXLmXKlCkApKamYrWWdQ06c+YMU6dOJSMjg9atWzNw4EC2bNlC79693VW2iIiIZ7WKNKZC0NxSVbI4PBWrPCQ3N5eQkBBycnIIDg72dDkiIiJVKigo4PDhw0SHgD8F0KYr+Id4uqxG5fzM0dH4+/tXWFeX7+8m87SUiIiIiCso3IiIiIipKNyIiIiIqSjciIiINGH2y6hrrKu6ATeJQfxERESkIl9fX6xWK8dP5xDa0hvfgkIsFHi6rEbjcDjIysrCYrHg4+PToH0p3IiIiDRBVquV6Oho0tcv5XiLTnAWY6wZE7NYLHTq1AkvL68G7UfhRkREpIny9fWlc+q7lJzYj+22JRB1tadLalQ+Pj4NDjagcCMiItKkWXDgU5SDj9UOF439IlVTh2IRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFY+Gm7lz5zJ48GCCgoJo374948ePZ//+/TVut3z5cnr27Im/vz/9+vXj448/dkO1IiIi0hx4NNxs2LCBadOm8cUXX7B27VqKi4u54YYbyM/Pr3abLVu2cOedd/Lb3/6Wb775hvHjxzN+/Hh2797txspFRESkqbI4HA6Hp4solZWVRfv27dmwYQPXXnttlW0mTpxIfn4+H374oXPZVVddRVxcHIsXL67xGLm5uYSEhJCTk0NwcLDLahcREWkUryTA0a/hF8vhihs8XY3H1OX7u0n1ucnJyQGgTZs21bbZunUrCQkJFZaNHj2arVu3Vtm+sLCQ3NzcCi8RERExryYTbux2Ow888ADDhw+nb9++1bbLyMggLCyswrKwsDAyMjKqbD937lxCQkKcr8jISJfWLSIiIk1Lkwk306ZNY/fu3bz11lsu3e/MmTPJyclxvtLS0ly6fxEREWlavD1dAMD06dP58MMP2bhxI506dbpk2/DwcDIzMyssy8zMJDw8vMr2fn5++Pn5uaxWERERado8euXG4XAwffp0Vq5cybp164iOjq5xm6FDh5KcnFxh2dq1axk6dGhjlSkiIiLNiEev3EybNo1ly5bx/vvvExQU5Ow3ExISQkBAAACTJk2iY8eOzJ07F4D777+fESNGMH/+fG688Ubeeusttm3bxksvveSxzyEiIiJNh0ev3Lz44ovk5OQwcuRIIiIinK+3337b2SY1NZX09HTn+2HDhrFs2TJeeuklYmNjeffdd1m1atUlOyGLiIjI5cOjV25qM8TO+vXrKy376U9/yk9/+tNGqEhERESauybztJSIiIiIKyjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqSjciIiIiKko3IiIiIipKNyIiIiIqdQr3Bw6dMjVdYiIiIi4RL3CTUxMDKNGjeL111+noKDA1TWJiIiI1Fu9ws2OHTvo378/iYmJhIeH8/vf/56vvvrK1bWJiIiI1Fm9wk1cXBzPPvssx48fZ8mSJaSnp3P11VfTt29fFixYQFZWlqvrFBEREamVBnUo9vb25rbbbmP58uXMmzePAwcOMGPGDCIjI5k0aRLp6emuqlNERESkVhoUbrZt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MzPdVX6z4opzvWnTJrZv384HH3zAP/7xD3bt2uWu8psNV/3tyM3NZcuWLYwbN84dZTcPDjEdwLFy5coKy+Lj4x3Tpk1zvrfZbI4OHTo45s6dW6d9f/bZZ47bb7/dFWWaUkPOvc5t7bni/+N/+MMfHMuXL2/MMk3BFed6xowZjqVLlzZilc1fQ87za6+95vjlL3/pjjKbDV25uQwUFRWxfft2EhISnMusVisJCQls3brVg5WZn869e9TmPGdmZnL27FkAcnJy2LhxIz169PBIvc1Zbc51fn6+81zn5eWxbt06+vTp45F6m6u6/O3QLanKPD4ruDS+kydPYrPZnDOtlwoLC2Pfvn213k9CQgLffvst+fn5dOrUieXLlzN06FBXl2sqtT33OrcNU5vznJKSwu9+9ztnR+L77ruPfv36eaLcZq025zozM5MJEyYAxlNqU6dOZfDgwW6vtTmr7d+OnJwcvvrqK9577z13l9ikKdxIrX366aeeLsG0dG4bX3x8PDt37vR0GZeFrl278u2333q6jMtCSEiI+o5VQbelLgPt2rXDy8ur0n8AmZmZhIeHe6iqy4POvXvoPLuPzrV76Dw3jMLNZcDX15eBAweSnJzsXGa320lOTtatj0amc+8eOs/uo3PtHjrPDaPbUiaRl5fHgQMHnO8PHz7Mzp07adOmDZ07dyYxMZHJkyczaNAg4uPjWbhwIfn5+dx1110erNocdO7dQ+fZfXSu3UPnuRF5+nEtcY3PPvvMAVR6TZ482dnm+eefd3Tu3Nnh6+vriI+Pd3zxxReeK9hEdO7dQ+fZfXSu3UPnufFobikRERExFfW5EREREVNRuBERERFTUbgRERERU1G4EREREVNRuBERERFTUbgRERERU1G4EREREVNRuBERERFTUbgRERERU1G4ERGphSlTpjB+/HhPlyEitaBwIyIiIqaicCMibrN69WquvvpqWrVqRdu2bbnppps4ePAgAEeOHMFisfDOO+9wzTXXEBAQwODBg/nhhx/4+uuvGTRoEC1btmTs2LFkZWU592m325kzZw6dOnXCz8+PuLg4Vq9e7Vy/fv16LBYL2dnZzmU7d+7EYrFw5MgRAJKSkmjVqhVr1qyhV69etGzZkjFjxpCeng7AX/7yF1599VXef/99LBYLFouF9evXN/r5EpH6UbgREbfJz88nMTGRbdu2kZycjNVqZcKECdjtdmeb2bNn8+c//5kdO3bg7e3NL37xCx555BGeffZZPv/8cw4cOMCsWbOc7Z999lnmz5/P008/za5duxg9ejS33HILP/74Y51qO3fuHE8//TT/+c9/2LhxI6mpqcyYMQOAGTNm8LOf/cwZeNLT0xk2bJhrToqIuJy3pwsQkcvH7bffXuH9kiVLCA0NZc+ePbRs2RIwgsTo0aMBuP/++7nzzjtJTk5m+PDhAPz2t78lKSnJuY+nn36aP/3pT/z85z8HYN68eXz22WcsXLiQRYsW1bq24uJiFi9eTLdu3QCYPn06c+bMAaBly5YEBARQWFhIeHh4/T68iLiNrtyIiNv8+OOP3HnnnXTt2pXg4GCioqIASE1Ndbbp37+/8/ewsDAA+vXrV2HZiRMnAMjNzeX48ePO4FNq+PDh7N27t061BQYGOoMNQEREhPM4ItK86MqNiLjNzTffTJcuXXj55Zfp0KEDdrudvn37UlRU5Gzj4+Pj/N1isVS5rPxtrJpYrca/4RwOh3NZcXFxpXblj1F6nPLbiEjzoSs3IuIWp06dYv/+/fz5z3/m+uuvp1evXpw5c6ZB+wwODqZDhw5s3ry5wvLNmzfTu3dvAEJDQwGcnYPB6FBcV76+vthstvoXKyJuoys3IuIWrVu3pm3btrz00ktERESQmprKo48+2uD9Pvzww8yePZtu3boRFxfH0qVL2blzJ2+88QYAMTExREZG8pe//IW///3v/PDDD8yfP7/Ox4mKimLNmjXs37+ftm3bEhISUulqj4g0DbpyIyJuYbVaeeutt9i+fTt9+/blwQcf5Kmnnmrwfv/4xz+SmJjIQw89RL9+/Vi9ejUffPAB3bt3B4zbTW+++Sb79u2jf//+zJs3j7/97W91Ps7UqVPp0aMHgwYNIjQ0tNLVIhFpOiwO3VQWERERE9GVGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMRWFGxERETEVhRsRERExFYUbERERMZX/DyaV76E788p2AAAAAElFTkSuQmCC"
-class="
-"
->
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>A sample of 821 from the non-fraud data represents a 9.09% of the total dataset compared when the sample and the frauds dataset are combined
+A sample of 3285 from the non-fraud data represents a 28.57% of the total dataset compared when the sample and the frauds dataset are combined
+A sample of 7391 from the non-fraud data represents a 47.37% of the total dataset compared when the sample and the frauds dataset are combined
+A sample of 13140 from the non-fraud data represents a 61.54% of the total dataset compared when the sample and the frauds dataset are combined
+A sample of 20532 from the non-fraud data represents a 71.43% of the total dataset compared when the sample and the frauds dataset are combined
+A sample of 29566 from the non-fraud data represents a 78.26% of the total dataset compared when the sample and the frauds dataset are combined
+A sample of 40243 from the non-fraud data represents a 83.05% of the total dataset compared when the sample and the frauds dataset are combined
+A sample of 52563 from the non-fraud data represents a 86.49% of the total dataset compared when the sample and the frauds dataset are combined
+A sample of 66525 from the non-fraud data represents a 89.01% of the total dataset compared when the sample and the frauds dataset are combined
+</pre>
 </div>
-
 </div>
 
 </div>
@@ -16823,11 +16841,209 @@ class="
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>So we can see that the distribution of amounts transferred is not that different (with the exception of the insanely large transfers on <code>isFraud</code>), but the proportions of the labels in each dataset is much more meaningful: all frauds are either &quot;CASH_OUT&quot; or &quot;TRANSFER&quot; (which is captured by the variable <code>isMovement</code>), while those labels appear in much less proportion in the non-fraudulent transactions in the dataset. This can explain why the model assigned a much larger coefficient to that variable.</p>
-<p>So we can now create the equation for the model we trained, as we are confident its doing its work (at least with the dataset we have at hand). It takes (approximately) the shape of:</p>
-<p><code>logit(p) = -10.78 + (0.089 * amount) - (0.8254 * isPayment) + (3.7380 * isMovement)</code></p>
-<p>in which <code>logit(p)</code> is the logarithm of the odds of a transaction being classified as fraud. See a full explanation of <code>logit(p)</code> <a href="https://towardsdatascience.com/a-simple-interpretation-of-logistic-regression-coefficients-e3a40a62e8cf">here</a>.</p>
-<p>All that's left now is for the model to hit the road and see how it performs with future real-world transactions data! Too bad that falls outside the scope of this project.</p>
+<p>These represent a good distribution of sample sizes matching different proportions in our new dataset that will combine the sample from non-frauds data with the data from the fraudulent transactions to try and create a better model and test our hypothesis that the proportions of the labels was the problem. In the first example, our sample size is <code>821</code>, which would mean that the dataset combined the non-fraud sample and the fraud data would will contain 9.09% of non-frauds and 90.91% of frauds. You can easily infer the proportions for the rest of the samples.</p>
+<p>This will be performed in a loop and I'll spare you the commentary. We'll see what balance of fraud and non-fraud data works best to create a model, and what are the trade-offs.</p>
+
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">:</span>
+    <span class="c1">#Create the dataset combining the sample of different sizes with the frauds data:</span>
+    <span class="n">non_fraud_sample</span> <span class="o">=</span> <span class="n">non_frauds_data</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">non_fraud_sample</span><span class="p">,</span> <span class="n">frauds_data</span><span class="p">])</span>
+
+    <span class="c1">#Repeat the feature and label selection, data splitting, training and evaluation of the model:</span>
+    <span class="n">features_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">'amount'</span><span class="p">,</span> <span class="s1">'isPayment'</span><span class="p">,</span> <span class="s1">'isMovement'</span><span class="p">]]</span>
+    <span class="n">label_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">'isFraud'</span><span class="p">]]</span>
+    
+    <span class="c1">#The training this time will be performed with the majority of the data, </span>
+    <span class="c1">#since the tests need to be performed against all the original dataset</span>
+    <span class="n">X_train_df</span><span class="p">,</span> <span class="n">X_test_df</span><span class="p">,</span> <span class="n">y_train_df</span><span class="p">,</span> <span class="n">y_test_df</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">features_df</span><span class="p">,</span> <span class="n">label_df</span><span class="p">,</span> <span class="n">train_size</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span> <span class="n">test_size</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+    <span class="n">X_train_df</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train_df</span><span class="p">)</span>
+    <span class="n">X_test_df</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_test_df</span><span class="p">)</span>
+
+    <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train_df</span><span class="p">,</span> <span class="n">y_train_df</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+
+    <span class="c1">#And we will use the model to make predictions on the real-world data (the original split `X_test` from the dataset)</span>
+    <span class="c1">#so we can compare straight away how the model performs and what was the best proportion of labels to work with,</span>
+    <span class="c1">#and we can compare its performance directly against our previous model using `y_test` and `y_predict`</span>
+    <span class="n">y_predict</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+    <span class="c1">#Print the confusion matrices and relevant scores </span>
+    <span class="c1">#(Even though they are misleading, we will still print the `.score` methods for each step so we can compare them </span>
+    <span class="c1">#to the actual results and other scores, to further emphasize their misleading nature.</span>
+
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s1">'For sample size of'</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s1">':'</span><span class="p">,</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s1">'Training score: '</span><span class="p">,</span> <span class="n">lr</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s1">'Test score: '</span><span class="p">,</span> <span class="n">lr</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s1">'Confusion matrix:'</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">,</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s1">'Recall Score: '</span><span class="p">,</span> <span class="n">recall_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s1">'Precision Score: '</span><span class="p">,</span> <span class="n">precision_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s1">'F1 Score: '</span><span class="p">,</span> <span class="n">f1_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'---------------------'</span><span class="p">,</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span>
+    <span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>For sample size of 821 : 
+Training score:  0.0012876546364323411 
+Test score:  0.001298207342258378 
+Confusion matrix:
+ [[      0 1906308]
+ [      0    2478]] 
+Recall Score:  1.0 
+Precision Score:  0.001298207342258378 
+F1 Score:  0.002593048370083882 
+
+ --------------------- 
+
+For sample size of 3285 : 
+Training score:  0.5620247633836376 
+Test score:  0.5619367493265353 
+Confusion matrix:
+ [[1070139  836169]
+ [      0    2478]] 
+Recall Score:  1.0 
+Precision Score:  0.0029547592729718226 
+F1 Score:  0.0058921087828800725 
+
+ --------------------- 
+
+For sample size of 7391 : 
+Training score:  0.5658866046646552 
+Test score:  0.5658057005866556 
+Confusion matrix:
+ [[1077524  828784]
+ [      0    2478]] 
+Recall Score:  1.0 
+Precision Score:  0.002981009597455435 
+F1 Score:  0.005944299181999184 
+
+ --------------------- 
+
+For sample size of 13140 : 
+Training score:  0.5658946875882667 
+Test score:  0.5658167023437933 
+Confusion matrix:
+ [[1077545  828763]
+ [      0    2478]] 
+Recall Score:  1.0 
+Precision Score:  0.0029810849079869735 
+F1 Score:  0.005944448909044894 
+
+ --------------------- 
+
+For sample size of 20532 : 
+Training score:  0.5658946875882667 
+Test score:  0.5658167023437933 
+Confusion matrix:
+ [[1077545  828763]
+ [      0    2478]] 
+Recall Score:  1.0 
+Precision Score:  0.0029810849079869735 
+F1 Score:  0.005944448909044894 
+
+ --------------------- 
+
+For sample size of 29566 : 
+Training score:  0.5658946875882667 
+Test score:  0.5658167023437933 
+Confusion matrix:
+ [[1077545  828763]
+ [      0    2478]] 
+Recall Score:  1.0 
+Precision Score:  0.0029810849079869735 
+F1 Score:  0.005944448909044894 
+
+ --------------------- 
+
+For sample size of 40243 : 
+Training score:  0.8350872529151289 
+Test score:  0.835030223398537 
+Confusion matrix:
+ [[1592303  314005]
+ [    887    1591]] 
+Recall Score:  0.6420500403551251 
+Precision Score:  0.005041255275732266 
+F1 Score:  0.010003961342329145 
+
+ --------------------- 
+
+For sample size of 52563 : 
+Training score:  0.9555863554860823 
+Test score:  0.9555099419212002 
+Confusion matrix:
+ [[1822741   83567]
+ [   1355    1123]] 
+Recall Score:  0.45318805488297015 
+Precision Score:  0.01326012516235683 
+F1 Score:  0.025766336270190898 
+
+ --------------------- 
+
+For sample size of 66525 : 
+Training score:  0.9747518654714118 
+Test score:  0.9747986416497187 
+Confusion matrix:
+ [[1859784   46524]
+ [   1580     898]] 
+Recall Score:  0.36238902340597257 
+Precision Score:  0.0189363586521024 
+F1 Score:  0.03599198396793587 
+
+ --------------------- 
+
+</pre>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p>Before we evaluate, let's recap what the confusion matrices tell us:</p>
+<p>-True Positives (top left) are the number of transactions that were not fraud and that were classified as such.</p>
+<p>-False Positives (top right) are the number of transactions that were <em>not</em> fraud but were classified as fraud.</p>
+<p>-False Negatives (bottom left) are the number of transactions that were frauds but were <em>not</em> classified as such.</p>
+<p>-True Positives (bottom right) are the number of transactions that were actual fraud and that were classified as such.</p>
+<p>So we're interested in a model that maximises true positives and true positives (because we are interested in detecting fraud while keeping normal transactions from being flagged as fraud), while minimising false positives and false negatives (so we don't make too many mistakes).</p>
+<p>We therefore can see that as the representativity of non-fraud data increases in proportion in the training dataset, the model has more and more trouble correctly classifying fraud as such, since the proportion of this label decreases in the training dataset. In this example, as soon as the model jumps from ~78% to ~83% of data being non-fraud in the training dataset (meaning a decrease from ~22% to ~17% of the training data thus having the label for fraud) the model starts to have trouble correctly predicting the frauds (which is reflected in the massive drop in the Recall score). On the flipside, at that point it starts to get better at classifying normal transactions as such (while before this point nearly 43.5% of our normal transactions are being flagged as fraud).</p>
+<p>Most importantly, <strong>this highlights how the balance of the labels in the training dataset affects the model's performance on unseen data</strong></p>
+<p>The model still needs tweaking (we can't have nearly half of our normal transactions being flagged as fraud!), but now we have a better idea about the importance of this parameter. A next step could include including or dropping other variables, arbitrarily subsetting the data based on other financial criteria (e.g. training with a dataset only including transactions higher than a certain amount) but this exercise has been long enough. For now, we will wrap it up here.</p>
+<p>Thanks for reading!</p>
 
 </div>
 </div>
