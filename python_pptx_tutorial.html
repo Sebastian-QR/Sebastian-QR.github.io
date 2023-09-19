@@ -14593,9 +14593,9 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="A-Semi-automated-Pipeline-for-Creating-a-PowerPoint-Report-from-Data-Source-Files-(Python-PPTX-Tutorial)">A Short Python PPTX Tutorial Using Streamlined Syntax<a class="anchor-link" href="#A-Semi-automated-Pipeline-for-Creating-a-PowerPoint-Report-from-Data-Source-Files-(Python-PPTX-Tutorial)">&#182;</a></h1><p>In a world now dominated by generative AI and complex machine learning approaches, it is easy to forget that most people will not use these approaches as often as we think they would. However, many more people still have to create reports from the data they collect, sometimes regularly and in a very standardised format. This is a perfect situation where we could leverage the power of scripting to remove plenty of tedious, time-consuming and mind-numbing manual work.</p>
-<p>Fortunately, there is a library called <a href="https://python-pptx.readthedocs.io/en/latest/">python-pptx</a> that can do the heavy lifting for us. It is well equipped to handle the most recurring tasks you would normally do on a PowerPoint presentation, and it also has its own internal plotting engine. However, the documentation is difficult to follow, the syntax appears much more complex than it should be, and sometimes finding a way to achieve simple tasks (such as changing the color of the text in a textbox) becomes more an exercise in tinkering and experimenting with the code rather than an exercise in following the documentation or use cases. There are some tutorials already on the internet on how to use <code>python-pptx</code>, but similarly to the official documentation I found them to be highly non-intuitive in both the approach and the scripts used. This is why I put together this tutorial, to show some basic functionality that can be achieved with <code>python-pptx</code> while keeping the syntax and approach as intuitive as I can make it for others to follow. Credit to ourworldindata for the publicly available data I will use in this tutorial.</p>
-<p>Importantly, this tutorial will show <em>only some of the capabilities and possibilities that can be achieved with the library</em>, albeit arguably the most commonly needed ones when creating a report: inserting text, tables and figures. You are encouraged to try more things on your own.</p>
+<h1 id="A-Short-Python-PPTX-Tutorial-Using-Simpler-Syntax">A Short Python PPTX Tutorial Using Simpler Syntax<a class="anchor-link" href="#A-Short-Python-PPTX-Tutorial-Using-Simpler-Syntax">&#182;</a></h1><p>In a world now dominated by generative AI and complex machine learning approaches, it is easy to forget that most people will not use these approaches as often as we think they would. Many more people however still have to create reports from the data they collect, sometimes regularly and in a very standardised format, while also avoiding dashboarding (which can be difficult for a third party to interpret or time-consuming to fully automate). This is a perfect situation where we could simply put a PowerPoint presentation together, and leverage the power of scripting to remove plenty of tedious, time-consuming and mind-numbing manual work while creating said presentation, while using language we're already familiar with (Python).</p>
+<p>Fortunately, there is a library called <a href="https://python-pptx.readthedocs.io/en/latest/">python-pptx</a> that can do the heavy lifting for us. It is well equipped to handle the most recurring tasks you would normally do on a PowerPoint presentation, and it also has its own internal plotting engine. However, the documentation is difficult to follow, the syntax appears much more complex than it should be, and sometimes finding a way to achieve simple tasks (such as changing the color of the text in a textbox) becomes more an exercise in tinkering and experimenting with the code rather than an exercise in following the documentation or use cases. There are some tutorials already on the internet on how to use <code>python-pptx</code>, but similarly to the official documentation I found them hard follow in both the approach and the scripts used, and I learned much more by tinkering around, but this took a while. This is why I put together this tutorial, to show some basic functionality that can be achieved with <code>python-pptx</code> while keeping the syntax and approach as intuitive as I can make it for others to follow, and hopefully save you some time.</p>
+<p>Importantly, this short tutorial will show <em>only some of the capabilities and possibilities that can be achieved with the library</em>, albeit arguably the most commonly needed ones when creating a report: inserting text, tables and figures. You are encouraged to try more things on your own. Credit to ourworldindata for the publicly available data I will briefly use in this tutorial. Note: this script was run on Python 3.10 with python-pptx 0.6.21, pandas 1.4.4, and matplotlib 3.5.3.</p>
 <p>But first we need to discuss a couple of topics that I have found confuse most people working with PowerPoint: &quot;true&quot; placeholders and the Slide Master.</p>
 
 </div>
@@ -14658,7 +14658,7 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <p>This distinction will completely change the approach you take from a coding perspective, since, for example:</p>
 <ul>
-<li><p>&quot;True&quot; placeholders contain the format of the shape (size, font, style, colour, etc), while &quot;false&quot; placeholders do not. This means that if you assign a simple string to a &quot;true&quot; placeholder, it will be output with the format contained in the placeholder, while if you assign it to a &quot;false&quot; placeholder, it will be output with a predefined format. The desired formatting of the text output to a &quot;false&quot; needs to be done via coding.</p>
+<li><p>&quot;True&quot; placeholders will preserve the format of the shape (size, font, style, colour, etc), while &quot;false&quot; placeholders will not. This means that if you assign a simple string to a &quot;true&quot; placeholder using <code>python-pptx</code>, it will be output with the format contained in the placeholder, while if you assign it to a &quot;false&quot; placeholder, it will be output with a predefined format that may not match what you expected. You will have to code the desired formatting of the text output to a &quot;false&quot; placeholder while assigning the string to the latter.</p>
 </li>
 <li><p>&quot;True&quot; placeholders will constrain the output of, say, the image you assign to them to the shape of the placeholder. This applies to both its size and position on the slide. So, if you assign a 10 x 5 graph to a 3 x 3 placeholder, the graph will be 3 x 3, most of the time cropped, instead of resized (see below).</p>
 </li>
@@ -14676,7 +14676,7 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="Inspecting-the-slides-and-their-elements">Inspecting the slides and their elements<a class="anchor-link" href="#Inspecting-the-slides-and-their-elements">&#182;</a></h2><p>For this tutorial I will just use a template consisting of three slides: a title (first) slide with empty &quot;true&quot; placeholders, a second slide with a mixture of &quot;true&quot; and &quot;false&quot; placeholders (the one you saw earlier), a third one similar to the second one but with a table (&quot;false&quot;) placeholder, and a fourth one that contains a picture (&quot;true&quot; )placeholder alongside other &quot;true&quot; placeholders.</p>
+<h2 id="Inspecting-the-slides-and-their-elements">Inspecting the slides and their elements<a class="anchor-link" href="#Inspecting-the-slides-and-their-elements">&#182;</a></h2><p>For this tutorial I will just use a template consisting of three slides: a title (first) slide with empty &quot;true&quot; placeholders, a second slide with a mixture of &quot;true&quot; and &quot;false&quot; placeholders (the one you saw earlier), a third one similar to the second one but with a table (&quot;false&quot;) placeholder, and a fourth one that contains a picture (&quot;true&quot;) placeholder alongside other &quot;true&quot; placeholders.</p>
 
 </div>
 </div>
@@ -14988,17 +14988,21 @@ Shape: 3,
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#Get data</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Get Slide</span>
+<span class="n">slide_4</span> <span class="o">=</span> <span class="n">prs</span><span class="o">.</span><span class="n">slides</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="c1"># Get data</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'./co2-emissions-vs-gdp.csv'</span><span class="p">)</span>
 <span class="n">au</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">'Entity'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'Australia'</span><span class="p">][[</span><span class="s1">'Year'</span><span class="p">,</span> <span class="s1">'GDP per capita'</span><span class="p">]]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">'Year'</span><span class="p">)</span>
 
+<span class="c1"># Define plot</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
 <span class="n">au</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">'Year'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">'GDP per capita'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">);</span>
+
+<span class="c1"># Insert plot</span>
 <span class="n">image_stream</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">image_stream</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
-
-<span class="n">slide_4</span> <span class="o">=</span> <span class="n">prs</span><span class="o">.</span><span class="n">slides</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-<span class="n">slide_4</span><span class="o">.</span><span class="n">placeholders</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert_picture</span><span class="p">(</span><span class="n">image_stream</span><span class="p">)</span> <span class="c1">#also works to insert images saved to a directory</span>
+<span class="n">slide_4</span><span class="o">.</span><span class="n">placeholders</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert_picture</span><span class="p">(</span><span class="n">image_stream</span><span class="p">)</span> <span class="c1">#also works to insert images saved to a local directory</span>
 </pre></div>
 
      </div>
@@ -15038,11 +15042,16 @@ Shape: 3,
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">,:</span><span class="mi">4</span><span class="p">]</span>
-
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Get slide</span>
 <span class="n">slide_3</span> <span class="o">=</span> <span class="n">prs</span><span class="o">.</span><span class="n">slides</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="c1"># Define data for table</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">,:</span><span class="mi">4</span><span class="p">]</span>
+
+<span class="c1"># Create table</span>
 <span class="n">table_1</span> <span class="o">=</span> <span class="n">slide_3</span><span class="o">.</span><span class="n">placeholders</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span><span class="o">.</span><span class="n">insert_table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
 
+<span class="c1"># Pass on the df to the table</span>
 <span class="n">n_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 <span class="n">n_cols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
 <span class="n">colnames</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
@@ -15152,7 +15161,7 @@ Shape: 3,
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="Passing-a-Dataframe-to-a-Table-Shape">Passing a Dataframe to a Table Shape<a class="anchor-link" href="#Passing-a-Dataframe-to-a-Table-Shape">&#182;</a></h2><p>The same principle applied to passing strings applies to passing a dataframe to a table shape (although in the case of tables it often makes more sense to center the data in the cell, which can be performed with the <code>.alignment</code> attribute):</p>
+<h2 id="Passing-a-Dataframe-to-a-Table-Shape">Passing a Dataframe to a Table Shape<a class="anchor-link" href="#Passing-a-Dataframe-to-a-Table-Shape">&#182;</a></h2><p>The same principle applied to passing strings applies to passing a dataframe to a table shape -- since a table is simply a collection of textboxes -- although in the case of tables it often makes more sense to center the data in the cell (which can be performed with the <code>.alignment</code> attribute):</p>
 
 </div>
 </div>
